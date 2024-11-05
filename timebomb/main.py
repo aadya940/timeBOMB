@@ -1,5 +1,5 @@
 from nicegui import ui
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import threading
 import time
 import queue
@@ -77,12 +77,13 @@ class TaskManager:
                 self.task_queue.put(task)
 
             for task in near_expiry_tasks:
-                ui.notify(
-                    f"Task {task['name']} is about to expire! 💣",
-                    close_button="OK",
-                    type="info",
-                    multi_line=True,
-                )
+                with notify:
+                    ui.notify(
+                        f"Task {task['name']} is about to expire! 💣",
+                        close_button="OK",
+                        type="info",
+                        multi_line=True,
+                    )
 
             self.update_task_list()
             time.sleep(1)
@@ -152,13 +153,14 @@ class TaskManager:
 
         ui.timer(1, check_queue)
 
+
 # Create an instance of the TaskManager
 task_manager = TaskManager()
 
 # Main layout
 with ui.column().classes("items-center"):
     ui.label("💣 timeBOMB: Tasks that don’t wait").classes(
-        "text-3xl font-extrabold text-center mt-6 text-blue-600"
+        "text-3xl font-extrabold text-center mt-6"
     )
 
     ui.label(
@@ -223,11 +225,42 @@ with ui.dialog() as add_task_dialog:
         )
 
         ui.label("Add a New Task").classes("text-xl font-bold")
-        task_name = ui.input("Task Name")
-        task_description = ui.textarea("Task Description")
 
-        date_picker = ui.date().props(f"width=20px height=20px")
-        time_input = ui.input("Enter Time (e.g., '3:00 PM')", placeholder="3:00 PM")
+        # Task Name input
+        task_name = ui.input("Task Name").props("placeholder='E.g., Complete report'")
+        ui.label("Enter a unique name for the task").classes("text-gray-500 text-sm")
+
+        # Task Description (optional)
+        task_description = ui.textarea("Task Description").props(
+            "placeholder='Brief description of the task'"
+        )
+        ui.label("Optional: Provide additional details about the task").classes(
+            "text-gray-500 text-sm"
+        )
+
+        # Deadline Date picker
+        today = datetime.now().date()
+        date_picker = ui.date().props(f"min='{today}' width=20px height=20px")
+        ui.label("Select the date by which the task should be completed").classes(
+            "text-gray-500 text-sm"
+        )
+
+        # Deadline Time input (optional)
+        time_input = ui.input(
+            "Enter Time (e.g., '3:00 PM')",
+            placeholder="3:00 PM",
+            validation={
+                "Improper Time (Hours).": lambda value: int(value.strip()[0])
+                in range(0, 13),
+                "Improper Time (Minutes).": lambda value: int(value.strip()[2:4])
+                in range(0, 61),
+            },
+        )
+        ui.label("Optional: Specify the time the task should be completed by").classes(
+            "text-gray-500 text-sm"
+        )
+
+        # Duration Dropdown
         duration_dropdown = ui.select(
             {
                 86400: "1 Day",
@@ -235,9 +268,14 @@ with ui.dialog() as add_task_dialog:
                 2592000: "1 Month",
                 31536000: "1 Year",
             }
-        )
+        ).props("placeholder='Select task duration'")
 
-        ui.button(
+        ui.label(
+            "Choose a default duration if no specific deadline date is set"
+        ).classes("text-gray-500 text-sm")
+
+        # Add Task button with no validation
+        add_task_button = ui.button(
             "Add Task",
             on_click=lambda: (
                 task_manager.add_task(
@@ -267,5 +305,6 @@ with ui.dialog() as add_task_dialog:
         ).classes(
             "bg-green-500 text-white font-bold mt-3 px-4 py-2 rounded-lg shadow-md"
         )
+
 
 ui.run()
