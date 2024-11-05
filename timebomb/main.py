@@ -159,9 +159,29 @@ task_manager = TaskManager()
 
 # Main layout
 with ui.column().classes("items-center"):
-    ui.label("💣 timeBOMB: Tasks that don’t wait").classes(
-        "text-3xl font-extrabold text-center mt-6"
-    )
+    with ui.row().classes(
+        "w-full bg-gray-900 p-4 items-center justify-between shadow-lg"
+    ):
+        ui.label("💣 timeBOMB: Tasks that don’t wait").classes(
+            "text-3xl font-semibold text-white"  # Increased font size and changed to semi-bold
+        )
+
+        ui.space()
+
+        # Create a navigation link group with padding and hover effects
+        with ui.row().classes("gap-8 items-center"):
+            ui.link("How to Use").classes(
+                "text-xl text-white hover:text-blue-400 transition duration-200"
+            )
+            ui.add_head_html(
+                '<link href="https://unpkg.com/eva-icons@1.1.3/style/eva-icons.css" rel="stylesheet" />'
+            )
+
+            with ui.row().classes("gap-2"):
+                ui.icon("eva-github").classes("text-2xl text-white")
+                ui.link("Our GitHub", "https://github.com/aadya940/timeBOMB").classes(
+                    "text-xl text-white hover:text-blue-400 transition duration-200"
+                )
 
     ui.label(
         "Create tasks with self-destruct timers. Once set, you can't change the timer!"
@@ -305,6 +325,5 @@ with ui.dialog() as add_task_dialog:
         ).classes(
             "bg-green-500 text-white font-bold mt-3 px-4 py-2 rounded-lg shadow-md"
         )
-
 
 ui.run()
